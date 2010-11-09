@@ -1,0 +1,9 @@
+Package: fristdr 
+Version: 0.1
+Author: Olga&Eugenee
+Maintainer: Olga <olga@irnok.net> Eugenee <eugene@irnok.net> 
+Title: FRiS-TDR claster analyses
+Description: The fris-tdr package create division into classes of input matrix with FRiS-TDR method.
+License: GPL-2
+URL: http://dirk.eddelbuettel.com/code/digest.html
+
