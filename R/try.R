@@ -1,3 +1,4 @@
+# This is a cool program
 library(cluster)
 
 fris <- function (rho_self, rho_alien) {
