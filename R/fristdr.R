@@ -1,47 +1,145 @@
-
 # $Id: fristdr.R 24 2009-09-24 12:36:55Z edd $
+library(cluster)
+fris <- function (rho_self, rho_alien) {
+	(rho_alien - rho_self) / (rho_self + rho_alien)
+}
 
-dissiCl <- c("dissimilarity", "dist")
+fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  #Оценка компактности, если в i-ом классе jый образец - единственный столп.
+	kol_ss <- ncol(dm_mix) 		#Количество образцов 
+	kol_st <- length(cl)		#Количество стандартных образцов 
+	rez=0
 
-diss.matrix <- function(m, lareas) {
-    sm <- matrix(0, lareas, lareas)
-    for (i in 1:lareas) {
-	    for (j in 1:lareas) {
-	        sm[i,j]=m[[j]][i]
-	    }
-    }
-    full <- sm
-    full[!lower.tri(full, diag = TRUE)] <- sm
-    disv <- t(full)[lower.tri(full)]
-    if (any(is.na(disv)))
-        attr(disv, "NA.message") <- "NA-values in the dissimilarity matrix !"
-    class(disv) <- dissiCl
-    attr(disv, "Labels") <- 1:lareas
-    attr(disv, "Size") <- lareas
-    attr(disv, "Metric") <- "euclidian" # or "manhattan"
-    disv
-};
+	for (i in 1:kol_ss) {
+		rho_self = NULL
+		rho_alien = 3
+		min_=NULL
+		rho_min=NULL
+		if (i<= kol_st){
+			if (cl[i]==i_class){
+				rho_self = dm_mix[i, j_sample]
+				for (j in 1:kol_st){ 
+				if (i !=j){
+					if( cl[i] != cl[j]){
+						rho=dm_mix[i,j]
+						if (rho_alien > rho) {
+							rho_alien=rho
+						}
+					}
+				}
+				}	
+			}else{
+				rho_alien = min(rho_alien, dm_mix[i, j_sample])
+				for (j in 1:kol_ss) { 
+				if(i!=j){
+					if (j<=kol_st){
+						if (cl[i] == cl[j]){
+							if (is.null(rho_self)){
+								rho_self = dm_mix[i,j]
+							}else{
+								rho=dm_mix[i,j]
+								if (rho_self > rho) {
+									rho_lelf=rho
+								}
+							}
+						}
+					}else{
+						rho=dm_mix[i,j]
+						if (rho_self > rho) {
+							rho_lelf=rho
+						}
+					}
+				}
+				}	
+			}
+		}else{
+			for (k in 1:n){
+				for (j in 1:kol_st) {
+				if (cl[j]==k){
+					if (is.null(min_)){
+						min_ = dm_mix[i,j] 
+					}else{
+						rho= dm_mix[i,j]
+						if (min_ > rho) {
+						min_=rho
+					
+						}
+					} 
+				}
+				}
+				rho_min[k]=min_
+			}
+			g=which.min(rho_min)
+			if (g==i_class) {
+				rho_self = dm_mix[i, j_sample]
+				rho_min[g] <- rho_alien
+				rho_alien = min(rho_min)
+			}else{
+				rho_alien = min(rho_alien, dm_mix[i, j_sample])
+				for (j in 1:kol_ss) {
+					
+					
+					if (j<=kol_st){
+						if (cl[j] == i_class){
+							if (is.null(rho_self)){
+								rho_self = dm_mix[i,j]
+							}else{
+								rho=dm_mix[i,j]
+								if (rho_self > rho) {
+									rho_lelf=rho
+								}
+							}
+						}
+					}else{
+						rho=dm_mix[i,j]
+						if (rho_self > rho) {
+							rho_lelf=rho
+						}
+					}
+				}
+			}
+		}
+		
+	f = fris(rho_self, rho_alien)
+	rez=rez+f
+	}
+	rez / length(cl)
+}
 
-comp.matrix <- function(m, lareas){
-	#sm=diss.matrix(m, lareas);
-	sm=m
-	disc <- matrix(0, lareas, lareas) 
-	for (i in 1:lareas) {
-		v <- sm[i,]
-	    for (j in 1:lareas) {
-			vv <- v[j]
-	        disc[i,j]= (max(vv)-sm[i,j])/(max(vv)+sm[i,j])
-	    }
-    }
-	disc
-};
 
-fristdr <- function(m){
-	lareas=length(m[1,])
-	rez=comp.matrix(m,lareas)
+fristdr <- function (data_st, n, mix) {
+	clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
+	cl = clus$clustering	
+	kol_st <- length(cl)									#Количество стандартных образцов 
+	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
+	kol_ss <- ncol(dm_mix)  								#Количество образцов 
+	s=NULL
+	for (i in 1:n){
+		f_mix_max = NULL  	    # Максимальное значение F для столпа из класса i 								
+		i_f = NULL				# Номер образца
+		f_mix = NULL
+		for (j in 1:kol_ss){
+			
+			if (j <= kol_st) {
+				if (cl[j] == i) {
+					f_mix <- append(f_mix,  fris_compact_mix (i, j, dm_mix, cl, n))
+					i_f <- append(i_f, j)
+				} 
+			} else {
+				f_mix <- append(f_mix, fris_compact_mix (i, j, dm_mix, cl, n))
+				i_f <- append(i_f, j)	
+			}
+		}	
+		num<- which.max(f_mix)
+		f_mix_max<-i_f[num]
+		s <- append(s,f_mix_max)
+	}
+	s
+}
 
-	return(rez)
-};
-
-
-
+test<-function(){
+	new <- read.table("/home/olga/Dev/fristdr/R/new.csv")
+	mix<-rbind(ruspini, new)
+	system_of_stolps <- fristdr(ruspini, 5, mix) 
+	system_of_stolps
+	
+}
