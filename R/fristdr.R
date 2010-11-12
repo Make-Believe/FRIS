@@ -105,9 +105,13 @@ fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  #Оценка
 	rez / length(cl)
 }
 
+fristdr_2 <- function (ruspini, n, clus, system_of_slolps, mix) {
 
-fristdr <- function (data_st, n, mix) {
-	clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
+
+}
+
+fristdr_1 <- function (data_st, n, clus, mix) {
+	#clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
 	cl = clus$clustering	
 	kol_st <- length(cl)									#Количество стандартных образцов 
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
@@ -139,7 +143,10 @@ fristdr <- function (data_st, n, mix) {
 test<-function(){
 	new <- read.table("/home/olga/Dev/fristdr/R/new.csv")
 	mix<-rbind(ruspini, new)
-	system_of_stolps <- fristdr(ruspini, 5, mix) 
-	system_of_stolps
+	n=5
+	clus <-fanny(data_st,n)	
+	system_of_stolps <- fristdr_1(ruspini, n, clus, mix) 
+	stolp_to_add <- fristdr_2(ruspini, n, clus, system_of_slolps, mix) 
+	#system_of_stolps
 	
 }
