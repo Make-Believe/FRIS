@@ -105,12 +105,27 @@ fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  #Оценка
 	rez / length(cl)
 }
 
-fristdr_2 <- function (ruspini, n, clus, system_of_slolps, mix) {
-
+fristdr_2 <- function (ruspini, n, clus, s, mix) {
+	cl = clus$clustering	
+	kol_st <- length(cl)									#Количество стандартных образцов 
+	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
+	kol_ss <- ncol(dm_mix)  								#Количество образцов 
+	for (j in 1:kol_ss){
+			
+			if (j <= kol_st) {
+				#if (cl[j] == i) {
+				f_mix <- append(f_mix,  fris_compact_mix_add (cl[j], s, j, dm_mix, cl, n))
+				i_f <- append(i_f, j)
+				#} 
+			} else {
+				f_mix <- append(f_mix, fris_compact_mix_add (NULL , s, j, dm_mix, cl, n))
+				i_f <- append(i_f, j)	
+			}
+		}
 
 }
 
-fristdr_1 <- function (data_st, n, clus, mix) {
+fristdr <- function (data_st, n, clus, mix) {
 	#clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
 	cl = clus$clustering	
 	kol_st <- length(cl)									#Количество стандартных образцов 
@@ -146,7 +161,7 @@ test<-function(){
 	n=5
 	clus <-fanny(data_st,n)	
 	system_of_stolps <- fristdr_1(ruspini, n, clus, mix) 
-	stolp_to_add <- fristdr_2(ruspini, n, clus, system_of_slolps, mix) 
+	stolp_to_add <- fristdr_2(ruspini, n, clus, mix, system_of_slolps) 
 	#system_of_stolps
 	
 }
