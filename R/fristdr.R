@@ -239,15 +239,14 @@ fristdr <- function(data_st, new, clus){
 	ff_mix =NULL				
 	
 	for (k in 1:kol_ss){
-	if (k>8){break}													#Запасное условие остановки:)
-	#if (k>3){
-		#if (ff_mix[k] < ff_mix[k-1]){
-		#	if (ff_mix[k-1]>ff_mix[k-2]){break}}}						#Условие остановки
+	if (k>40){break}													#Запасное условие остановки:)
+	if (k>3){
+		if (ff_mix[k] < ff_mix[k-1]){
+			if (ff_mix[k-1]>ff_mix[k-2]){break}}}						#Условие остановки
 			
 		f_mix = NULL
 		i_f = NULL
 		cl_i = NULL	
-		ff_mix =NULL
 		num_stolp_add=NULL
 		for (j in 1:kol_ss){
 		
@@ -275,10 +274,11 @@ fristdr <- function(data_st, new, clus){
 		}	
 		num<- which.max(f_mix)
 		num_stolp_add <- i_f[num]
+		
 		ff_mix <- append(ff_mix, max(f_mix))
 		resultant_system_of_stolps <- actual_system_of_stolps
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}
-	ff_mix
-	#resultant_system_of_stolps										#Результат работы алгоритма
+	#ff_mix
+	resultant_system_of_stolps										#Результат работы алгоритма
 }
