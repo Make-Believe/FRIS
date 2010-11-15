@@ -266,7 +266,7 @@ fristdr <- function(data_st, new, clus){
 	ff_mix =NULL				
 	
 	for (k in 1:kol_ss){
-	#if (k>90){break}													#Запасное условие остановки:)
+	if (k>3){break}													#Запасное условие остановки:)
 	if (k>3){
 		#print(k)
 		#print(ff_mix[k])
@@ -312,6 +312,59 @@ fristdr <- function(data_st, new, clus){
 		resultant_system_of_stolps <- actual_system_of_stolps
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}
-	ff_mix
-	#resultant_system_of_stolps										#Результат работы алгоритма
+	#ff_mix
+	#print(resultant_system_of_stolps)
+	resultant_system_of_stolps										#Результат работы алгоритма
+	
+}
+
+#Функция отображения результата, где:
+# data_st - данные о верифицированных образцах
+# new - неизвестные образцы
+# clus - разбиение верифицированных образцов
+plot_fristdr <- function(data_st, new, clus){
+	s <- fristdr(data_st, new, clus)
+	mix<-rbind(data_st, new)
+	
+	#n=ncol(clus$membership)
+	#s<- fristdr_1(data_st, n, clus, mix)
+	#print('Система столпов:')
+	#print(s)
+	
+	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
+	v<-clus$clustering
+	kol_ss <- ncol(dm_mix) 		#Количество образцов 
+	kol_st <- length(v)		#Количество стандартных образцов 
+	kol<-kol_st+1
+	
+	for (i in kol:kol_ss){
+		min_rho = NULL
+		num_cl = NULL
+		#print(i)
+		for (j in 1:length(s)){
+			for (l in 1:length(s[[j]])){
+				if (is.null(min_rho)){
+					min_rho <- dm_mix[i, s[[j]][l]]
+					num_cl <-j
+				}else{ 
+					rho <- dm_mix[i, s[[j]][l]]
+					if (min_rho > rho){
+						min_rho <- rho
+						num_cl <- j
+					}
+				}
+
+				#print(dm_mix[i, s[[j]][l]])
+				#print(num_cl)
+				
+				
+			}
+		}
+		#print(rho_min)
+		#print('--------------')
+		v<-append(v,num_cl)
+	}
+	print('Разбиение:')
+	print(v)
+	clusplot(mix, v, labels=3)
 }
