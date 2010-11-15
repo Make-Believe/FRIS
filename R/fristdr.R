@@ -1,10 +1,14 @@
 # $Id: fristdr.R 24 2009-09-24 12:36:55Z edd $
 library(cluster)
 
+# Расчет функции конкурентного сходства, где:
+# rho_self - расстояние до ближайшего "своего" обзазца
+# rho_alien - расстояние до ближайшего чужого образца
 fris <- function (rho_self, rho_alien) {
 	(rho_alien - rho_self) / (rho_self + rho_alien)
 }
 
+# Проверка, есть ли в smth в списке l
 checking <- function (l, smth){
 	f<-TRUE
 	for (i in 1:length(smth)){
@@ -15,7 +19,13 @@ checking <- function (l, smth){
 	f
 }
 
-fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  #Оценка компактности, если в i-ом классе jый образец - единственный столп.
+# Оценка компактности, если в классе, передаваемый образец - единственный столп, где:
+# i_class - номер класса
+# j_sample - номер образца
+# dm_mix - матрица сходства
+# сl - разбиение
+# n - количество классов
+fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  
 	kol_ss <- ncol(dm_mix) 		#Количество образцов 
 	kol_st <- length(cl)		#Количество стандартных образцов 
 	rez=0
@@ -116,6 +126,11 @@ fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  #Оценка
 	rez / length(cl)
 }
 
+# Рассчет функции конкурентного сходства для множества с системой столпов, где:
+# ss - система столпов
+# dm_mix - матрица сходства
+# сl - разбиение
+# n - количество классов
 fris_compact_mix_ss <- function (ss, dm_mix, cl, n){
 	kol_ss <- ncol(dm_mix) 		#Количество образцов 
 	kol_st <- length(cl)		#Количество стандартных образцов 
@@ -195,6 +210,11 @@ fris_compact_mix_ss <- function (ss, dm_mix, cl, n){
 	#100
 }
 
+# Первый шаг алгоритма, определение первой системы столпов
+# data_st - данные верифицированной выборки
+# n - количество классов
+# clus - разбиение data_st на n классов
+# mix - смешанные данные
 fristdr_1 <- function (data_st, n, clus, mix) {
 	#clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
 	cl = clus$clustering	
@@ -224,11 +244,18 @@ fristdr_1 <- function (data_st, n, clus, mix) {
 	s
 }
 
+#Функция FRiS-TDR, возращает оптимальную систему столпов для смешанной выборки, где:
+# data_st - данные о верифицированных образцах
+# new - неизвестные образцы
+# clus - разбиение верифицированных образцов
 fristdr <- function(data_st, new, clus){
 	n=ncol(clus$membership)
 	mix<-rbind(data_st, new)
 	first_system_of_stolps <- fristdr_1(data_st, n, clus, mix) 		#Первый шаг алгоритма
-
+	print('Первая система столпов: ' )
+	print (first_system_of_stolps )
+	print ('=======')
+	
 																	#Второй шаг работы алгоритма
 	cl = clus$clustering	
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
@@ -239,10 +266,15 @@ fristdr <- function(data_st, new, clus){
 	ff_mix =NULL				
 	
 	for (k in 1:kol_ss){
-	if (k>40){break}													#Запасное условие остановки:)
+	#if (k>90){break}													#Запасное условие остановки:)
 	if (k>3){
-		if (ff_mix[k] < ff_mix[k-1]){
-			if (ff_mix[k-1]>ff_mix[k-2]){break}}}						#Условие остановки
+		#print(k)
+		#print(ff_mix[k])
+		#print(ff_mix[k-1])
+		if (ff_mix[k-1] < ff_mix[k-2]){
+			if (ff_mix[k-2]>ff_mix[k-3]){break}
+		}
+	}																	#Условие остановки
 			
 		f_mix = NULL
 		i_f = NULL
@@ -274,11 +306,12 @@ fristdr <- function(data_st, new, clus){
 		}	
 		num<- which.max(f_mix)
 		num_stolp_add <- i_f[num]
-		
+		print(max(f_mix))
+		#print()
 		ff_mix <- append(ff_mix, max(f_mix))
 		resultant_system_of_stolps <- actual_system_of_stolps
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}
-	#ff_mix
-	resultant_system_of_stolps										#Результат работы алгоритма
+	ff_mix
+	#resultant_system_of_stolps										#Результат работы алгоритма
 }

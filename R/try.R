@@ -154,9 +154,13 @@ fris_compact_one <-function (clus, dm=NULL) {
 
 test <- function () {
 	t<-fanny(ruspini,5)
-	cpt <- fris_compact_one(t)
-	
-	joined <- read.table("/home/olga/Dev/fristdr/R/new.csv")
-	cpt_mix <- fris_compact_mix(t, joined) 
-cpt_mix
+	#cpt <- fris_compact_one(t)
+	n=5
+	print('Hi')
+	print(n)
+	#joined <- read.table("/home/olga/Dev/fristdr/R/new.csv")
+	#cpt_mix <- fris_compact_mix(t, joined) 
+#cpt_mix
+
+100
 }
