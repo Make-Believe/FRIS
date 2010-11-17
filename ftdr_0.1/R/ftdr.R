@@ -270,7 +270,7 @@ plot.fristdr <- function(data_st, new, clus){
 
 
 test<- function(data_st, cl, n){
-	new<- read.table('/home/olga/Dev/ftdr_0.1/data/new.csv')
+	new<- read.table('ftdr_0.1/data/new.csv') # Взять файл относительно текущего директория
 	mix<-rbind(data_st, new)
 	
 	first_system_of_stolps <- fristdr_1(data_st, n, cl, mix) 		#Первый шаг алгоритма
