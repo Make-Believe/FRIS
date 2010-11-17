@@ -1,0 +1,9 @@
+Package: ftdr 
+Version: 0.1
+Author: Olga Vorobyova
+Maintainer: Olga Vorobyova <olga@irnok.net> Evgany Cherkashin <eugene@irnok.net> 
+Title: FRiS-TDR claster analyses
+Description: The fris-tdr package create division into classes of input matrix with FRiS-TDR method.
+License: GPL-2
+URL: http://dirk.eddelbuettel.com/code/digest.html
+

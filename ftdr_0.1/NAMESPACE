@@ -1,0 +1,13 @@
+## package has dynamic library
+
+
+##import(cluster)
+##importFrom(cluster, fanny) 
+
+importFrom(cluster, fanny)
+
+## and one and only one core function
+
+
+export(test)
+useDynLib(ftdr)
