@@ -21,6 +21,22 @@ int get_eli(int * dm_mix, int num_col, int num_row, int *size) {
 double fris(double r_s, double r_a){
 	return (r_a - r_s)/(r_a + r_s);
 	}
+
+double get_min(int * num_cl, int * ss, int kol_col, int k, double * dm_mix, int * kol_ss){
+	int i;
+	double mn, rho; 
+	printf ("ss = %i",ss[1]);
+	//mn = get_el(dm_mix, k, ss[num_cl][1], kol_ss);
+	for (i=1; i<= kol_col; i++){
+		if (ss[i] != -1){
+	//		rho = get_el(dm_mix, k, ss[num_cl][i], kol_ss);
+			if (mn > rho){
+				mn = rho;
+			} 
+		}
+	}
+	return mn;
+}
 	
 // Находим значение fris-функции, для смешанной выборки, где определён единственный столп:
 	// num_cl - номер класса, для которого определен единственный столп;
@@ -39,7 +55,7 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 	
 	for (k = 1; k <= *kol_ss; k++){ 			// для каждого образца находим расстояние до ближайшего своего и ближайшего чужого. 
 		rho_self=0;
-		rho_alien=2;
+		rho_alien=8;
 		if (k != *smpl-1){						// рассматриваем его, если только он не является передаваемым столпом
 			if (k <= *kol_st){
 				if(cl[k-1] == *num_cl){			// находим расстояния, если он попадает в передаваемый класс 
@@ -133,12 +149,31 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 	// n - количество классов в разбиении;
 	// rez - переменная для формирования результата;
 void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int * cl, int * n, int * kol_col, double * rez) {
-	int r,c;
-	for (r = 1; r <= *kol_col; r++) {
-		for (c = 1; c<= *n; c++) {
-			printf("%i ", get_eli(s, c, r, kol_col));
+	int i,j,k;
+	int ss[*n][*kol_col];
+	double rho_self, rho_alien;
+	
+	for (i = 1; i <=*n; i++) {
+		for (j = 1; j<= *kol_col; j++) {
+			ss[i][j] = get_eli(s, i, j, n);
+			printf("%i", ss[i][j]);
 		}
-		printf("\n");
+		printf("%n");
 	}
 	
+	//printf("%i", ss[1][1]);
+	//for (k = 1; k <= *kol_ss; k++){
+	//	rho_self = 0;
+	//	rho_alien = 8; 
+	//	if (k <= *kol_st){
+			//printf("%i", ss[1][1]);
+			//printf("/n");
+			//rho_self = get_min(cl[k-1], ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
+			
+	//		printf ("rho_self = %f", rho_self);
+	//		printf("%n");
+	//	}else{
+		
+	//	}
 }
+	//}
