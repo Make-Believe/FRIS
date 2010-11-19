@@ -168,12 +168,11 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 	// rez - переменная для формирования результата;
 void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int * cl, int * n, int * kol_col, double * rez) {
 	int i,j,k, count;
-	int ss[*n+1][*kol_col+1];
-	int b[(*n+1) * (*kol_col+1)];
+	int *ss, *b;
 	double rho_self, rho_alien, rho, max, r, f;
 	
-	//ss=(int *)alloca((*kol_col)*(*n)*sizeof(int));
-	//b =(int *)alloca((*n)*(*kol_col)*sizeof(int));
+	ss=(int *)alloca((*kol_col)*(*n)*sizeof(int));
+	b =(int *)alloca((*n)*(*kol_col)*sizeof(int));
 	
 	for (i = 1; i <= *n; i++) {
 		for (j = 1; j<= *kol_col; j++) {
@@ -191,12 +190,12 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 		if (k <= *kol_st){
 			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
 			count = 1;
-			//printf("%i\n", k);
+			printf("%i\n", k);
 			for (i=1; i<= *n; i++){
 				if (cl[k-1] != i){
 					for (j=0; j< *kol_col; j++){
 						b[count] = ss[i][j+1]; 
-						//printf ("%i " ,b[count]);
+						printf ("%i " ,b[count]);
 						count ++ ;
 					}
 				}

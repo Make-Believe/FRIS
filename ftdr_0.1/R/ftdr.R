@@ -287,18 +287,18 @@ test<- function(data_st, cl, n){
 	ff_mix =NULL	
 	
 #--- testing	
-	s <- first_system_of_stolps 
-	s[[1]] <- append(s[[1]], 13)
-	s[[1]] <- append(s[[1]], 14)
-	s[[1]] <- append(s[[1]], 17)
-	s[[1]] <- append(s[[1]], 18)
-	s[[1]] <- append(s[[1]], 19)
-	ss <- list.as.matrix(s)
-	print (ss)
-	storage.mode(dm_mix) <- "double"
-	storage.mode(ss) <- "integer"
-	rz <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="ftdr")	
-	rz[[8]]
+#	s <- first_system_of_stolps 
+#	s[[1]] <- append(s[[1]], 13)
+#	s[[1]] <- append(s[[1]], 14)
+#	s[[1]] <- append(s[[1]], 17)
+#	s[[1]] <- append(s[[1]], 18)
+#	s[[1]] <- append(s[[1]], 19)
+#	ss <- list.as.matrix(s)
+#	print (ss)
+#	storage.mode(dm_mix) <- "double"
+#	storage.mode(ss) <- "integer"
+#	rz <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="ftdr")	
+#	rz[[8]]
 	
 #--- end of testing
 
@@ -314,6 +314,7 @@ test<- function(data_st, cl, n){
 		i_f = NULL
 		cl_i = NULL	
 		num_stolp_add=NULL
+		#print(actual_system_of_stolps)
 		
 		for (j in 1:kol_ss){
 			check <- checking(j, actual_system_of_stolps)
@@ -348,13 +349,13 @@ test<- function(data_st, cl, n){
 		num<- which.max(f_mix)
 		num_stolp_add <- i_f[num]
 		#print (k)
-		#print(max(f_mix))
+		print(max(f_mix))
 		ff_mix <- append(ff_mix, max(f_mix))
 		resultant_system_of_stolps <- actual_system_of_stolps
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}
 	
-
+	
 	resultant_system_of_stolps										#Результат работы алгоритма
 	
 }
