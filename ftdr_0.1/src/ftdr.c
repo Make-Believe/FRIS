@@ -22,21 +22,38 @@ double fris(double r_s, double r_a){
 	return (r_a - r_s)/(r_a + r_s);
 	}
 
-double get_min(int * num_cl, int * ss, int kol_col, int k, double * dm_mix, int * kol_ss){
+double get_min(int * ss, int * kol, int k, double * dm_mix, int * kol_ss){
 	int i;
-	double mn, rho; 
-	printf ("ss = %i",ss[1]);
-	//mn = get_el(dm_mix, k, ss[num_cl][1], kol_ss);
-	for (i=1; i<= kol_col; i++){
-		if (ss[i] != -1){
-	//		rho = get_el(dm_mix, k, ss[num_cl][i], kol_ss);
-			if (mn > rho){
-				mn = rho;
-			} 
+	double mn, rho;
+	mn = 0;
+	for (i=1; i<= *kol; i++){
+		if (ss[i] != 0){
+			if (mn==0){
+				mn = get_el(dm_mix, k, ss[i], kol_ss);
+			}else{			
+				rho = get_el(dm_mix, k, ss[i], kol_ss);
+				if (mn > rho){
+					mn = rho;
+				}
+			}
 		}
 	}
+	i = 0;
+	rho = 0; 
 	return mn;
 }
+
+char * cheking(int k, int * b, int kol){
+	char * d; 
+	int i;
+	d = "TRUE";
+	for (i = 1; i <= kol; i++){
+		if (b[i] == k){
+			d = "FALSE";
+		}
+	}
+	return d;
+}	
 	
 // Находим значение fris-функции, для смешанной выборки, где определён единственный столп:
 	// num_cl - номер класса, для которого определен единственный столп;
@@ -140,6 +157,7 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 }
 
 // Находим значение fris-функции, для смешанной выборки, где определёна система столпов:
+	// s - матрица столпов.
 	// num_cl - номер класса, для которого определен единственный столп;
 	// smpl - единственный столп класса num_cl;
 	// kol_ss - количество образцов в смешанной выборке;
@@ -149,31 +167,78 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 	// n - количество классов в разбиении;
 	// rez - переменная для формирования результата;
 void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int * cl, int * n, int * kol_col, double * rez) {
-	int i,j,k;
+	int i,j,k, count;
 	int ss[*n][*kol_col];
-	double rho_self, rho_alien;
+	int b[*n * *kol_col];
+	double rho_self, rho_alien, rho, max, r, f;
 	
-	for (i = 1; i <=*n; i++) {
+	ss=(int *)alloca((*kol_col)*(*n)*sizeof(int));
+	b =(int *)alloca((*n)*(*kol_col)*sizeof(int));
+	
+	for (i = 1; i <= *n; i++) {
 		for (j = 1; j<= *kol_col; j++) {
 			ss[i][j] = get_eli(s, i, j, n);
-			printf("%i", ss[i][j]);
+	//		printf("%i " ,ss[i][j]);
 		}
-		printf("%n");
+	//printf("\n");
 	}
-	
-	//printf("%i", ss[1][1]);
-	//for (k = 1; k <= *kol_ss; k++){
-	//	rho_self = 0;
-	//	rho_alien = 8; 
-	//	if (k <= *kol_st){
-			//printf("%i", ss[1][1]);
-			//printf("/n");
-			//rho_self = get_min(cl[k-1], ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
+	 
+
+	for (k = 1; k <= *kol_ss; k++){
+		rho_self = 0;
+		rho_alien = 8;
+		  
+		if (k <= *kol_st){
+			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
+			count = 1;
+			printf("%i\n", k);
+			for (i=1; i<= *n; i++){
+				if (cl[k-1] != i){
+					for (j=0; j< *kol_col; j++){
+						b[count] = ss[i][j+1]; 
+						printf ("%i " ,b[count]);
+						count ++ ;
+					}
+				}
+			}
+			//printf("%i count =\n", b[count-2]);
+			//printf("\n");
+			rho = get_min(b, &count-1, k, dm_mix, kol_ss);  
+			if (rho_alien > rho ){
+				rho_alien = rho; 
+			}
+		}else{
 			
-	//		printf ("rho_self = %f", rho_self);
-	//		printf("%n");
-	//	}else{
+			count = 1;
+			for (i=1; i<= *n; i++){
+				for (j=0; j< *kol_col; j++){
+					b[count] = ss[i][j+1]; 
+					count ++ ;
+				}
+			}
+			if(cheking(k, b, count -1) == "TRUE"){
+				rho_self = get_min(b, kol_col, k, dm_mix, kol_ss);
+				max = get_min(ss[1], kol_col, k, dm_mix, kol_ss);
+				for (i = 1; i <= *n; i++){
+					rho = get_min(ss[i], kol_col, k, dm_mix, kol_ss);
+					if(max < rho){ 
+						max = rho;  
+					}
+				}
+				if (rho_alien > max){
+					rho_alien = max;
+				}
+			}
+		}
 		
-	//	}
+		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
+		if (rho_self == 0 && rho_alien ==0 ){
+			printf("k = %i\n", k );
+		}
+		r=r+f;									
+	}	
+*rez = r / *kol_ss; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке 
 }
-	//}
+
+
+

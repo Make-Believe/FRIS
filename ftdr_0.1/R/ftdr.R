@@ -186,12 +186,14 @@ fristdr <- function(data_st, new, clus){
 	
 					if (j <= kol_st) {
 						system_of_slolps[[ cl[j] ]] <- append(system_of_slolps[[ cl[j] ]], j)
+						
 						f_mix <- append(f_mix,  fris_compact_mix_ss (system_of_slolps, dm_mix, cl, n))
 						i_f <- append(i_f, j)
 						cl_i <- append (cl_i, cl[j])
 					}else{
 						for(i in (1:n)){
 							system_of_slolps[[i]] <- append(system_of_slolps[[i]], j)
+							
 							f_mix <- append(f_mix, fris_compact_mix_ss (system_of_slolps, dm_mix, cl, n))
 							i_f <- append(i_f, j)
 							cl_i <- append (cl_i, i)
@@ -205,14 +207,14 @@ fristdr <- function(data_st, new, clus){
 		}	
 		num<- which.max(f_mix)
 		num_stolp_add <- i_f[num]
-		print(max(f_mix))
-		#print()
+		print (k)
+		#print(max(f_mix))
 		ff_mix <- append(ff_mix, max(f_mix))
 		resultant_system_of_stolps <- actual_system_of_stolps
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}
 	#ff_mix
-	#print(resultant_system_of_stolps)
+	print(actual_system_of_stolps)
 	resultant_system_of_stolps										#Результат работы алгоритма
 	
 }
@@ -272,27 +274,88 @@ plot.fristdr <- function(data_st, new, clus){
 test<- function(data_st, cl, n){
 	new<- read.table('/home/olga/Dev/fristdr/ftdr_0.1/data/new.csv')
 	mix<-rbind(data_st, new)
-	
 	first_system_of_stolps <- fristdr_1(data_st, n, cl, mix) 		#Первый шаг алгоритма
 	#print('Первая система столпов: ' )
 	#print (first_system_of_stolps )
-	#first_system_of_stolps
 
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
 	kol_ss <- ncol(dm_mix)
 	kol_st <- length(cl)			
 	rez=0
 	
+	actual_system_of_stolps <- first_system_of_stolps
+	ff_mix =NULL	
+	
+#--- testing	
 	s <- first_system_of_stolps 
-	s[[1]] <- append(s[[1]], 6)
-	#print (s) 
+	s[[1]] <- append(s[[1]], 13)
+	s[[1]] <- append(s[[1]], 14)
+	s[[1]] <- append(s[[1]], 17)
+	s[[1]] <- append(s[[1]], 18)
+	s[[1]] <- append(s[[1]], 19)
 	ss <- list.as.matrix(s)
+	print (ss)
 	storage.mode(dm_mix) <- "double"
 	storage.mode(ss) <- "integer"
-	
 	rz <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="ftdr")	
+	rz[[8]]
 	
-	ss
+#--- end of testing
+
+	for (k in 1:kol_ss){
+		#if (k>1){break}												#Запасное условие остановки:)
+		if (k>3){
+			if (ff_mix[k-1] < ff_mix[k-2]){
+				if (ff_mix[k-2]>ff_mix[k-3]){break}
+			}
+		}																#Условие остановки
+
+		f_mix = NULL
+		i_f = NULL
+		cl_i = NULL	
+		num_stolp_add=NULL
+		
+		for (j in 1:kol_ss){
+			check <- checking(j, actual_system_of_stolps)
+			if (check==TRUE){											# Идем по всем образцам, которые не принадлежат системе столпов
+					system_of_slolps <-	actual_system_of_stolps	
+					storage.mode(dm_mix) <- "double"
+					if (j <= kol_st) {
+						system_of_slolps[[ cl[j] ]] <- append(system_of_slolps[[ cl[j] ]], j)
+						ss <- list.as.matrix(system_of_slolps)
+						storage.mode(ss) <- "integer"
+						f_c_m_s <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="ftdr")	
+						f_mix <- append(f_mix, f_c_m_s[[8]] )
+						i_f <- append(i_f, j)
+						cl_i <- append (cl_i, cl[j])
+					}else{
+						for(i in (1:n)){
+							system_of_slolps[[i]] <- append(system_of_slolps[[i]], j)
+							ss <- list.as.matrix(system_of_slolps)
+							storage.mode(ss) <- "integer"
+							f_c_m_s <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="ftdr")	
+							f_mix <- append(f_mix, f_c_m_s[[8]] )
+							i_f <- append(i_f, j)
+							cl_i <- append (cl_i, i)
+							system_of_slolps <-	actual_system_of_stolps
+						}	
+					}
+				#system_of_slolps <-	actual_system_of_stolps	
+	
+			}	
+	
+		}	
+		num<- which.max(f_mix)
+		num_stolp_add <- i_f[num]
+		#print (k)
+		#print(max(f_mix))
+		ff_mix <- append(ff_mix, max(f_mix))
+		resultant_system_of_stolps <- actual_system_of_stolps
+		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
+	}
+	
+
+	resultant_system_of_stolps										#Результат работы алгоритма
 	
 }
 
@@ -303,7 +366,7 @@ fill.vector <- function (v, l) {
 		if (i <= lv) {
 			n[i] = v[i]
 		} else {
-			n[i] = -1;
+			n[i] = 0;
 		}
 	}
 	n
