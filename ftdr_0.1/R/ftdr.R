@@ -275,8 +275,8 @@ test<- function(data_st, cl, n){
 	new<- read.table('/home/olga/Dev/fristdr/ftdr_0.1/data/new.csv')
 	mix<-rbind(data_st, new)
 	first_system_of_stolps <- fristdr_1(data_st, n, cl, mix) 		#Первый шаг алгоритма
-	#print('Первая система столпов: ' )
-	#print (first_system_of_stolps )
+	print('Первая система столпов: ' )
+	print (first_system_of_stolps )
 
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
 	kol_ss <- ncol(dm_mix)
@@ -305,8 +305,8 @@ test<- function(data_st, cl, n){
 	for (k in 1:kol_ss){
 		#if (k>1){break}												#Запасное условие остановки:)
 		if (k>3){
-			if (ff_mix[k-1] < ff_mix[k-2]){
-				if (ff_mix[k-2]>ff_mix[k-3]){break}
+			if (ff_mix[k-1] <= ff_mix[k-2]){
+				if (ff_mix[k-2] >= ff_mix[k-3]){break}
 			}
 		}																#Условие остановки
 

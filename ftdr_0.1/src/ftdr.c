@@ -27,7 +27,7 @@ double get_min(int * ss, int * kol, int k, double * dm_mix, int * kol_ss){
 	double mn, rho;
 	mn = 0;
 	for (i=1; i<= *kol; i++){
-		if (ss[i] != 0){
+		if (ss[i] != 0 && ss[i]!=k){
 			if (mn==0){
 				mn = get_el(dm_mix, k, ss[i], kol_ss);
 			}else{			
@@ -191,22 +191,31 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 		if (k <= *kol_st){
 			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
 			count = 1;
-			//printf("%i\n", k);
 			for (i=1; i<= *n; i++){
 				if (cl[k-1] != i){
 					for (j=0; j< *kol_col; j++){
 						b[count] = ss[i][j+1]; 
-						//printf ("%i " ,b[count]);
 						count ++ ;
 					}
 				}
 			}
+	
 			//printf("%i count =\n", b[count-2]);
 			//printf("\n");
 			rho = get_min(b, &count-1, k, dm_mix, kol_ss);  
 			if (rho_alien > rho ){
 				rho_alien = rho; 
 			}
+			
+			//if (rho_alien == 0 ){
+			//	printf("rho = % f\n", rho);
+			//	for (i=1; i<=count-1; i++){
+			//		printf (" %i ", b[i]);
+			//	}
+			//	printf("\n");
+			//}
+			
+			
 		}else{
 			
 			count = 1;
