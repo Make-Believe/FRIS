@@ -1,5 +1,0 @@
-## package has dynamic library
-
-
-export(fristdr)
-useDynLib(fristdr)
