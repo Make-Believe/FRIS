@@ -9,5 +9,8 @@ importFrom(cluster, fanny)
 ## and one and only one core function
 
 
-export(test)
+export(fristdr)
+export(fris_stolps)
+export(clustersplot)
 useDynLib(ftdr)
+

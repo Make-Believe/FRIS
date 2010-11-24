@@ -1,6 +1,5 @@
 ## package has dynamic library
 
-import(cluster) 
 
-## and one and only one core function
 export(fristdr)
+useDynLib(fristdr)

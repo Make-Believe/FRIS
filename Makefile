@@ -1,18 +1,17 @@
-.PHONY: all package install test
-
-PACKAGE=ftdr
+#PKG=helloworld
+PKG=ftdr
 VER=0.1
+PKG_VER=$(PKG)_$(VER)
+PKG_TGZ=$(PKG_VER).tar.gz
 
-PKG_NAME=$(PACKAGE)_$(VER)
-CFLAGS=-g -O0
+.PHONY:	package install
 
-all: package
-
-package: 
-	tar czf $(PKG_NAME).tar.gz $(PKG_NAME)
-
+$(PKG_TGZ):$(PKG_VER)/src/$(PKG).c
+		tar -czvf $(PKG_TGZ) $(PKG_VER)
+		
+package: $(PKG_TGZ)
+		
 install: package
-	CFLAGS="$(CFLAGS)" sudo R CMD INSTALL $(PKG_NAME).tar.gz
-
-test: install
-	R
+		sudo R CMD INSTALL $(PKG_TGZ)
+		
+ 

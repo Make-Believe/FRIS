@@ -19,205 +19,13 @@ checking <- function (l, smth){
 	f
 }
 
-# Оценка компактности, если в классе, передаваемый образец - единственный столп, где:
-# i_class - номер класса
-# j_sample - номер образца
-# dm_mix - матрица сходства
-# сl - разбиение
-# n - количество классов
-fris_compact_mix <- function( i_class, j_sample, dm_mix, cl, n) {  
-	kol_ss <- ncol(dm_mix) 		#Количество образцов 
-	kol_st <- length(cl)		#Количество стандартных образцов 
-	rez=0
-
-	for (i in 1:kol_ss) {
-		rho_self = NULL
-		rho_alien = 3
-		min_=NULL
-		rho_min=NULL
-		if (i<= kol_st){
-			if (cl[i]==i_class){
-				rho_self = dm_mix[i, j_sample]
-				for (j in 1:kol_st){ 
-				if (i !=j){
-					if( cl[i] != cl[j]){
-						rho=dm_mix[i,j]
-						if (rho_alien > rho) {
-							rho_alien=rho
-						}
-					}
-				}
-				}	
-			}else{
-				rho_alien = min(rho_alien, dm_mix[i, j_sample])
-				for (j in 1:kol_ss) { 
-				if(i!=j){
-					if (j<=kol_st){
-						if (cl[i] == cl[j]){
-							if (is.null(rho_self)){
-								rho_self = dm_mix[i,j]
-							}else{
-								rho=dm_mix[i,j]
-								if (rho_self > rho) {
-									rho_lelf=rho
-								}
-							}
-						}
-					}else{
-						rho=dm_mix[i,j]
-						if (rho_self > rho) {
-							rho_lelf=rho
-						}
-					}
-				}
-				}	
-			}
-		}else{
-			for (k in 1:n){
-				for (j in 1:kol_st) {
-				if (cl[j]==k){
-					if (is.null(min_)){
-						min_ = dm_mix[i,j] 
-					}else{
-						rho= dm_mix[i,j]
-						if (min_ > rho) {
-						min_=rho
-					
-						}
-					} 
-				}
-				}
-				rho_min[k]=min_
-			}
-			g=which.min(rho_min)
-			if (g==i_class) {
-				rho_self = dm_mix[i, j_sample]
-				rho_min[g] <- rho_alien
-				rho_alien = min(rho_min)
-			}else{
-				rho_alien = min(rho_alien, dm_mix[i, j_sample])
-				for (j in 1:kol_ss) {
-					
-					
-					if (j<=kol_st){
-						if (cl[j] == i_class){
-							if (is.null(rho_self)){
-								rho_self = dm_mix[i,j]
-							}else{
-								rho=dm_mix[i,j]
-								if (rho_self > rho) {
-									rho_lelf=rho
-								}
-							}
-						}
-					}else{
-						rho=dm_mix[i,j]
-						if (rho_self > rho) {
-							rho_lelf=rho
-						}
-					}
-				}
-			}
-		}
-		
-	f = fris(rho_self, rho_alien)
-	rez=rez+f
-	}
-	rez / length(cl)
-}
-
-# Рассчет функции конкурентного сходства для множества с системой столпов, где:
-# ss - система столпов
-# dm_mix - матрица сходства
-# сl - разбиение
-# n - количество классов
-fris_compact_mix_ss <- function (ss, dm_mix, cl, n){
-	kol_ss <- ncol(dm_mix) 		#Количество образцов 
-	kol_st <- length(cl)		#Количество стандартных образцов 
-	rez=0
-	
-	for (i in 1: kol_ss){
-		rho_self = NULL
-		rho_alien = 3
-		if (i<=kol_st){
-			for (j in 1: kol_st){
-				if (i!=j){
-					if (cl[i]==cl[j]){
-						for (k in 1:length(ss[[cl[i]]])){
-							if (is.null(rho_self)){
-								rho_self <- dm_mix[ss[[cl[i]]][k], i]
-							}else{
-								rho <- dm_mix[ss[[cl[i]]][k], i]
-								if (rho_self>rho){rho_self<-rho}
-							}
-						}	
-					}else{
-						for (l in (1:length(ss))){
-							if (l != cl[i]){
-								for (k in 1:length(ss[[l]])){
-									rho <- dm_mix[ss[[l]][k], i]
-									if (rho_alien >rho){rho_alien<-rho}
-								}
-							}
-						}
-					}
-				}
-			}
-
-		}else{
-			check<-checking(i, ss)
-			if(check==TRUE){
-				
-				for (l in (1:length(ss))){
-					for (k in 1:length(ss[[l]])){
-						if (is.null(rho_self)){
-							rho_self<-dm_mix[ss[[l]][k],i]
-						}else{
-							rho<-dm_mix[ss[[l]][k],i]
-							if(rho_self>rho){rho_self<-rho}
-						}
-					}
-				}	
-				
-				rho_s<-NULL
-				for (h in 1:n){
-					#rho_s[h]<-NULL
-					rho_min = NULL
-					for (k in (1:length(ss[[h]]))){
-						if (is.null(rho_min)) {
-							rho_min <- dm_mix[ss[[h]][k], i]
-						}else{
-							rho <- dm_mix[ss[[h]][k], i]
-							if (rho_min > rho){rho_s[h]<-rho}
-						}
-					}
-					rho_s[h]=rho_min
-				}
-				rho_alien <- min(rho_alien, max(rho_s))
-				
-				
-			
-
-			}					
-				
-		}
-	f = fris(rho_self, rho_alien)
-	rez = rez + f
-	}
-
-
-	rez / length(cl)
-	#100
-}
 
 # Первый шаг алгоритма, определение первой системы столпов
 # data_st - данные верифицированной выборки
 # n - количество классов
-# clus - разбиение data_st на n классов
+# cl - вектор разбиение data_st на n классов
 # mix - смешанные данные
-fristdr_1 <- function (data_st, n, clus, mix) {
-	#clus <-fanny(data_st,n)	 								#Разбиение стандартных образцов на n классов
-	cl = clus$clustering	
+fristdr_1 <- function (data_st, n, cl, mix) {
 	kol_st <- length(cl)									#Количество стандартных образцов 
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
 	kol_ss <- ncol(dm_mix)  								#Количество образцов 
@@ -229,13 +37,17 @@ fristdr_1 <- function (data_st, n, clus, mix) {
 		for (j in 1:kol_ss){
 			if (j <= kol_st) {
 				if (cl[j] == i) {
-					f_c_m <- fris_compact_mix (i, j, dm_mix, cl, n)
-					f_mix <- append(f_mix,  f_c_m)
+					storage.mode(dm_mix) <- "double"
+					rez=0
+					f_c_m <- .C("fris_compact", as.integer(i), as.integer(j), as.integer(kol_ss), dm_mix, cl, as.integer(kol_st), as.integer(n), as.double(rez), PACKAGE="fristdr")
+					f_mix <- append(f_mix,  f_c_m[[8]])
 					i_f <- append(i_f, j)
 				} 
 			} else {
-				f_c_m <- fris_compact_mix (i, j, dm_mix, cl, n)
-				f_mix <- append(f_mix,f_c_m )
+				storage.mode(dm_mix) <- "double"
+				rez=0
+				f_c_m <- .C("fris_compact", as.integer(i), as.integer(j), as.integer(kol_ss), dm_mix, cl, as.integer(kol_st), as.integer(n), as.double(rez), PACKAGE="fristdr")
+				f_mix <- append(f_mix, f_c_m [[8]])
 				i_f <- append(i_f, j)	
 			}
 		}	
@@ -246,93 +58,15 @@ fristdr_1 <- function (data_st, n, clus, mix) {
 	s
 }
 
-#Функция FRiS-TDR, возращает оптимальную систему столпов для смешанной выборки, где:
-# data_st - данные о верифицированных образцах
-# new - неизвестные образцы
-# clus - разбиение верифицированных образцов
-fristdr <- function(data_st, new, clus){
-	n=ncol(clus$membership)
-	mix<-rbind(data_st, new)
-	first_system_of_stolps <- fristdr_1(data_st, n, clus, mix) 		#Первый шаг алгоритма
-	print('Первая система столпов: ' )
-	print (first_system_of_stolps )
-	print ('=======')
-	
-																	#Второй шаг работы алгоритма
-	cl = clus$clustering	
-	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
-	kol_st <- length(cl)											#Количество стандартных образцов 
-	kol_ss <- ncol(dm_mix)  										#Количество образцов 
-	actual_system_of_stolps <- first_system_of_stolps
-	system_of_slolps <-	actual_system_of_stolps 			
-	ff_mix =NULL				
-	
-	for (k in 1:kol_ss){
-	if (k>3){break}													#Запасное условие остановки:)
-	if (k>3){
-		#print(k)
-		#print(ff_mix[k])
-		#print(ff_mix[k-1])
-		if (ff_mix[k-1] < ff_mix[k-2]){
-			if (ff_mix[k-2]>ff_mix[k-3]){break}
-		}
-	}																	#Условие остановки
-			
-		f_mix = NULL
-		i_f = NULL
-		cl_i = NULL	
-		num_stolp_add=NULL
-		for (j in 1:kol_ss){
-		
-			check <- checking(j, actual_system_of_stolps)
-			if (check==TRUE){
-	
-					if (j <= kol_st) {
-						system_of_slolps[[ cl[j] ]] <- append(system_of_slolps[[ cl[j] ]], j)
-						f_mix <- append(f_mix,  fris_compact_mix_ss (system_of_slolps, dm_mix, cl, n))
-						i_f <- append(i_f, j)
-						cl_i <- append (cl_i, cl[j])
-					}else{
-						for(i in (1:n)){
-							system_of_slolps[[i]] <- append(system_of_slolps[[i]], j)
-							f_mix <- append(f_mix, fris_compact_mix_ss (system_of_slolps, dm_mix, cl, n))
-							i_f <- append(i_f, j)
-							cl_i <- append (cl_i, i)
-							system_of_slolps <-	actual_system_of_stolps
-						}	
-					}
-				system_of_slolps <-	actual_system_of_stolps	
-	
-			}	
-	
-		}	
-		num<- which.max(f_mix)
-		num_stolp_add <- i_f[num]
-		#print(max(f_mix))
-		#print()
-		ff_mix <- append(ff_mix, max(f_mix))
-		resultant_system_of_stolps <- actual_system_of_stolps
-		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
-	}
-	#ff_mix
-	print(resultant_system_of_stolps)
-	resultant_system_of_stolps										#Результат работы алгоритма
-	
-}
 
 #Функция отображения результата, где:
 # data_st - данные о верифицированных образцах
 # new - неизвестные образцы
 # clus - разбиение верифицированных образцов
-plot_fristdr <- function(data_st, new, clus){
-	s <- fristdr(data_st, new, clus)
+plot.fristdr <- function(data_st, cl, n, new){
+	s <- fristdr(data_st, cl, n, new)
 	mix<-rbind(data_st, new)
-	
-	#n=ncol(clus$membership)
-	#s<- fristdr_1(data_st, n, clus, mix)
-	#print('Система столпов:')
-	#print(s)
-	
+
 	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
 	v<-clus$clustering
 	kol_ss <- ncol(dm_mix) 		#Количество образцов 
@@ -355,19 +89,131 @@ plot_fristdr <- function(data_st, new, clus){
 						num_cl <- j
 					}
 				}
-
-				#print(dm_mix[i, s[[j]][l]])
-				#print(num_cl)
-				
-				
 			}
 		}
-		#print(rho_min)
-		#print('--------------')
+
 		v<-append(v,num_cl)
 	}
-	#print('Разбиение:')
-	#print(v)
-	
+	print('Разбиение:')
+	print(v)
 	clusplot(mix, v, labels=3)
+}
+
+#Функция FRiS-TDR, возращает оптимальную систему столпов для смешанной выборки, где:
+# data_st - данные о верифицированных образцах;
+# cl - разбиение верифицированных образцов;
+# n - количество классов;
+# new - неизвестные образцы;
+fristdr <- function(data_st, cl, n, new){
+	#new<- read.table('/home/olga/Dev/fristdr/ftdr_0.1/data/new.csv')
+	mix<-rbind(data_st, new)
+	first_system_of_stolps <- fristdr_1(data_st, n, cl, mix) 		#Первый шаг алгоритма
+	print('Первая система столпов: ' )
+	print (first_system_of_stolps )
+
+	dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
+	kol_ss <- ncol(dm_mix)
+	kol_st <- length(cl)			
+	rez=0
+	
+	actual_system_of_stolps <- first_system_of_stolps
+	ff_mix =NULL	
+	
+	for (k in 1:kol_ss){
+		#if (k>1){break}												#Запасное условие остановки:)
+		if (k>3){
+			if (ff_mix[k-1] <= ff_mix[k-2]){
+				if (ff_mix[k-2] >= ff_mix[k-3]){break}
+			}
+		}																#Условие остановки
+
+		f_mix = NULL
+		i_f = NULL
+		cl_i = NULL	
+		num_stolp_add=NULL
+
+		
+		for (j in 1:kol_ss){
+			check <- checking(j, actual_system_of_stolps)
+			if (check==TRUE){											# Идем по всем образцам, которые не принадлежат системе столпов
+				system_of_slolps <-	actual_system_of_stolps	
+				storage.mode(dm_mix) <- "double"
+				if (j <= kol_st) {
+					system_of_slolps[[ cl[j] ]] <- append(system_of_slolps[[ cl[j] ]], j)
+					ss <- list.as.matrix(system_of_slolps)
+					storage.mode(ss) <- "integer"
+					f_c_m_s <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="fristdr")	
+					f_mix <- append(f_mix, f_c_m_s[[8]] )
+					i_f <- append(i_f, j)
+					cl_i <- append (cl_i, cl[j])
+				}else{
+					for(i in (1:n)){
+						system_of_slolps[[i]] <- append(system_of_slolps[[i]], j)
+						ss <- list.as.matrix(system_of_slolps)
+						storage.mode(ss) <- "integer"
+						f_c_m_s <- .C("fris_compact_ss", ss, as.integer(kol_ss), as.integer(kol_st), dm_mix, cl, as.integer(n), as.integer(ncol(ss)), as.double(rez), PACKAGE="fristdr")	
+						f_mix <- append(f_mix, f_c_m_s[[8]] )
+						i_f <- append(i_f, j)
+						cl_i <- append (cl_i, i)
+						system_of_slolps <-	actual_system_of_stolps
+					}	
+				}
+			}	
+		}	
+		num<- which.max(f_mix)
+		num_stolp_add <- i_f[num]
+		print(max(f_mix))
+		ff_mix <- append(ff_mix, max(f_mix))
+		resultant_system_of_stolps <- actual_system_of_stolps
+		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
+	}
+	
+	
+	Print("Результирующая система столпов:")
+	s<-resultant_system_of_stolps										#Результирующая система столпов
+	print(s)
+	kol<-kol_st+1
+	
+	for (i in kol:kol_ss){
+		min_rho = NULL
+		num_cl = NULL
+		for (j in 1:length(s)){
+			for (l in 1:length(s[[j]])){
+				if (is.null(min_rho)){
+					min_rho <- dm_mix[i, s[[j]][l]]
+					num_cl <-j
+				}else{ 
+					rho <- dm_mix[i, s[[j]][l]]
+					if (min_rho > rho){
+						min_rho <- rho
+						num_cl <- j
+					}
+				}
+			}
+		}
+
+		v<-append(v,num_cl)												#вектор разбиения
+	}
+	Print("Разбиение:")
+	print(v)
+	clusplot(mix, v, labels=3)
+}
+
+fill.vector <- function (v, l) {
+	n = 1:l 
+	lv = length(v)
+	for (i in 1:l) {
+		if (i <= lv) {
+			n[i] = v[i]
+		} else {
+			n[i] = 0;
+		}
+	}
+	n
+};
+
+list.as.matrix <- function( l ){
+	ll = max(sapply(l, length))
+	nl = lapply(l, fill.vector, ll)
+	do.call('rbind',nl)
 }

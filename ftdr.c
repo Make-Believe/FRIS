@@ -1,1 +1,1 @@
-/home/olga/Dev/fristdr/ftdr_0.1/src/ftdr.c
+ftdr_0.1/src/ftdr.c

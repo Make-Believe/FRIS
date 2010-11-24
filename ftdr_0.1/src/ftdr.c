@@ -1,10 +1,12 @@
 
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <R.h>
 #include <Rdefines.h>
 #include <Rinternals.h>
+#include <math.h>
 
 
 double get_el(double * dm_mix, int num_col, int num_row, int *size) {
@@ -26,9 +28,10 @@ double get_min(int * ss, int * kol, int k, double * dm_mix, int * kol_ss){
 	int i;
 	double mn, rho;
 	mn = 0;
+	//printf("kol = %i\n", *kol);
 	for (i=1; i<= *kol; i++){
 		if (ss[i] != 0 && ss[i]!=k){
-			if (mn==0){
+			if (mn == 0){
 				mn = get_el(dm_mix, k, ss[i], kol_ss);
 			}else{			
 				rho = get_el(dm_mix, k, ss[i], kol_ss);
@@ -47,7 +50,7 @@ char * cheking(int k, int * b, int kol){
 	char * d; 
 	int i;
 	d = "TRUE";
-	for (i = 1; i <= kol; i++){
+	for (i = 0; i < kol; i++){
 		if (b[i] == k){
 			d = "FALSE";
 		}
@@ -72,7 +75,7 @@ void fris_compact(int * num_cl, int * smpl, int * kol_ss, double * dm_mix, int *
 	
 	for (k = 1; k <= *kol_ss; k++){ 			// для каждого образца находим расстояние до ближайшего своего и ближайшего чужого. 
 		rho_self=0;
-		rho_alien=8;
+		rho_alien=3;
 		if (k != *smpl-1){						// рассматриваем его, если только он не является передаваемым столпом
 			if (k <= *kol_st){
 				if(cl[k-1] == *num_cl){			// находим расстояния, если он попадает в передаваемый класс 
@@ -171,53 +174,35 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 	int ss[*n+1][*kol_col+1];
 	int b[(*n+1) * (*kol_col+1)];
 	double rho_self, rho_alien, rho, max, r, f;
-	
-	//ss=(int *)alloca((*kol_col)*(*n)*sizeof(int));
-	//b =(int *)alloca((*n)*(*kol_col)*sizeof(int));
-	
+
 	for (i = 1; i <= *n; i++) {
 		for (j = 1; j<= *kol_col; j++) {
 			ss[i][j] = get_eli(s, i, j, n);
-	//		printf("%i " ,ss[i][j]);
 		}
-	//printf("\n");
 	}
-	 
-
 	for (k = 1; k <= *kol_ss; k++){
 		rho_self = 0;
-		rho_alien = 8;
-		  
+		rho_alien = 6;	
+		//printf("%i\n", k);  
 		if (k <= *kol_st){
-			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 	
-			count = 1;
-			for (i=1; i<= *n; i++){
-				if (cl[k-1] != i){
-					for (j=0; j< *kol_col; j++){
-						b[count] = ss[i][j+1]; 
-						count ++ ;
+			if(cheking(k, ss[cl[k-1]], *kol_col) == "TRUE"){
+				rho_self = get_min(ss[cl[k-1]], kol_col, k, dm_mix, kol_ss); 
+				count = 1;
+				for (i=1; i<= *n; i++){
+					if (cl[k-1] != i){
+						for (j=0; j< *kol_col; j++){
+							b[count] = ss[i][j+1]; 
+							count ++ ;
+						}
 					}
 				}
+				count = count-1;
+				rho = get_min(b, &count, k, dm_mix, kol_ss);  
+				if (rho_alien > rho ){
+					rho_alien = rho; 
+				}
 			}
-	
-			//printf("%i count =\n", b[count-2]);
-			//printf("\n");
-			rho = get_min(b, &count-1, k, dm_mix, kol_ss);  
-			if (rho_alien > rho ){
-				rho_alien = rho; 
-			}
-			
-			//if (rho_alien == 0 ){
-			//	printf("rho = % f\n", rho);
-			//	for (i=1; i<=count-1; i++){
-			//		printf (" %i ", b[i]);
-			//	}
-			//	printf("\n");
-			//}
-			
-			
 		}else{
-			
 			count = 1;
 			for (i=1; i<= *n; i++){
 				for (j=0; j< *kol_col; j++){
@@ -225,8 +210,9 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 					count ++ ;
 				}
 			}
-			if(cheking(k, b, count -1) == "TRUE"){
-				rho_self = get_min(b, kol_col, k, dm_mix, kol_ss);
+			count = count-1;
+			if(cheking(k, b, count) == "TRUE"){
+				rho_self = get_min(b, &count, k, dm_mix, kol_ss);		
 				max = get_min(ss[1], kol_col, k, dm_mix, kol_ss);
 				for (i = 1; i <= *n; i++){
 					rho = get_min(ss[i], kol_col, k, dm_mix, kol_ss);
@@ -239,11 +225,13 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 				}
 			}
 		}
-		
-		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
 		if (rho_self == 0 && rho_alien ==0 ){
 			printf("k = %i\n", k );
 		}
+		//printf("rho_self = %f\n", rho_self);
+		//printf("rho_alien = %f\n", rho_alien);
+		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
+		//printf("f = %f\n", f);
 		r=r+f;									
 	}	
 *rez = r / *kol_ss; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке 
@@ -251,3 +239,130 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 
 
 
+// Находим значение fris-функции, для верифицированной выборки, где определён единственный столп:
+	// num_cl - номер класса, для которого определен единственный столп;
+	// smpl - единственный столп класса num_cl;
+	// dm - матрица подобия;
+	// cl - вектор разбиения;
+	// kol_st - количество верифицированных образов;
+	// n - количество классов в разбиении;
+	// rez - переменная для формирования результата;
+void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int * kol_st, int * n, double *rez) {
+	double rho_self, rho_alien, rho, rho_min, rho_cl[*n];
+	double f=0, r=0;
+	int k, i, j, num_class, el;
+	
+	for (k = 1; k <= *kol_st; k++){ 			// для каждого образца находим расстояние до ближайшего своего и ближайшего чужого. 
+		rho_self=0;
+		rho_alien=3;
+		if (k != *smpl){						// рассматриваем его, если только он не является передаваемым столпом
+			if(cl[k-1] == *num_cl){				// находим расстояния, если он попадает в передаваемый класс 
+				rho_self = get_el(dm, k, *smpl, kol_st);
+				for ( i = 1; i <= *kol_st; i++){
+					if (cl[i-1] != cl[k-1]){
+						rho = get_el(dm, k, i, kol_st);
+						if (rho_alien > rho){
+							rho_alien = rho; 
+						}
+					}
+				}
+				}else{							// находим расстояния, если он не попадает в передаваемый класс
+					rho = get_el(dm, k, *smpl, kol_st);
+					if (rho_alien > rho){
+						rho_alien = rho; 
+					}
+					for (i = 1; i <= *kol_st; i++){
+						if(cl[i-1] == cl[k-1]){
+							if (rho_self==0){
+								rho_self=get_el(dm, k, i, kol_st);
+							}else{
+								rho = get_el(dm, k, i, kol_st);
+								if (rho_self>rho){
+									rho_self = rho;
+								}
+							}
+						}
+					}
+				}		
+		
+		}
+		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
+		r=r+f;									
+	}	
+	*rez = r / *kol_st; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке
+}
+
+// Находим значение fris-функции, для верифицированной выборки, где определёна система столпов:
+	// 1) s - матрица столпов.
+	// 2) kol_st - количество верифицированных образов;
+	// 3) dm - матрица подобия;
+	// 4) cl - вектор разбиения;	
+	// 5) n - количество классов в разбиении;
+	// 6) kol_col - количество столбцов в s;
+	// 7) rez - переменная для формирования результата;
+void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int * n, int * kol_col, double * rez) {
+	int i,j,k, count;
+	int ss[*n+1][*kol_col+1];
+	int b[(*n+1) * (*kol_col+1)];
+	double rho_self, rho_alien, rho, max, r, f;
+
+	for (i = 1; i <= *n; i++) {
+		for (j = 1; j<= *kol_col; j++) {
+			ss[i][j] = get_eli(s, i, j, n);
+		}
+	}
+	for (k = 1; k <= *kol_st; k++){
+		rho_self = 0;
+		rho_alien = 3;	
+		if(cheking(k, ss[cl[k-1]], *kol_col) == "TRUE"){
+			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm, kol_st); 
+			count = 1;
+			
+			for (i=1; i<= *n; i++){
+				if (cl[k-1] != i){
+					for (j=0; j< *kol_col; j++){
+						b[count] = ss[i][j+1]; 
+						count ++ ;
+					}
+				}
+			}
+			count = count-1;
+			rho = get_min(b, &count, k, dm, kol_st);  
+			if (rho_alien > rho ){
+				rho_alien = rho; 
+			}
+		}
+		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
+		r=r+f;									
+	}	
+*rez = r / *kol_st; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке 
+}
+
+
+void recalc(double * b, int * n, double * xx, double *yy){
+	double pi = 3.1415926535;
+	double x[*n];
+	double y[*n];
+	double d;
+	int i;
+
+	x[0] = b[0];
+	y[0] = 0;
+	d = pow(b[0],2);
+	for (i=1; i<*n; i++){
+		x[i] = x[i-1] + b[i]*cos(pi*i/(*n));
+		y[i] = y[i-1] + b[i]*sin(pi*i/(*n));
+		d = d + pow(b[i],2);
+		} 
+		d = sqrt(d); 
+	if (x[*n-1] > 0){
+		printf("xx = %f\n", d/sqrt(1+pow((y[*n-1]/x[*n-1]),2)) );
+		*xx = d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
+		//d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
+		printf("xx = %f\n", *xx );
+	}else{
+		*xx = -d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
+	}
+	
+	*yy = y[*n-1]/x[*n-1] * *xx;
+}
