@@ -356,10 +356,9 @@ void recalc(double * b, int * n, double * xx, double *yy){
 		} 
 		d = sqrt(d); 
 	if (x[*n-1] > 0){
-		printf("xx = %f\n", d/sqrt(1+pow((y[*n-1]/x[*n-1]),2)) );
+		//printf("xx = %f\n", d/sqrt(1+pow((y[*n-1]/x[*n-1]),2)) );
 		*xx = d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
-		//d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
-		printf("xx = %f\n", *xx );
+
 	}else{
 		*xx = -d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
 	}
