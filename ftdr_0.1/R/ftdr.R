@@ -200,6 +200,7 @@ fristdr <- function(data_st, cl, n, new){
 	# data_st - образца
 	# cl - вектор разбиения
 	# n - количество класстеров
+	# new - набор новых образцов
 fris_stolps <- function(data_st, cl, n, new=NULL){
 #Первый шаг алгоритма, определяем по одному столпу на кждый класс. 		
 	kol_st <- length(cl)												#Количество стандартных образцов 
@@ -262,11 +263,11 @@ fris_stolps <- function(data_st, cl, n, new=NULL){
 		actual_system_of_stolps[[cl_i[num]]] <- append(actual_system_of_stolps[[cl_i[num]]], num_stolp_add)
 	}	
 	
-	if (is.null(new)){
-		clustersplot(data_st, cl, n, resultant_system_of_stolps)
+	if (is.null(new)){		# если new не задано, просто отображаем получившееся множество со столпами
+		clustersplot(data_st, cl, n, resultant_system_of_stolps) # функция отображения результата
 		print("System of stolps:")
 		print(resultant_system_of_stolps)
-	}else{
+	}else{					# если new задано, определяем, используя систему столпов принадлежность новых к классам и отображаем результат
 		mix<-rbind(data_st, new)
 		dm_mix <- as.matrix(daisy(mix, metric = "euclidean"))
 		v=NULL
@@ -293,7 +294,7 @@ fris_stolps <- function(data_st, cl, n, new=NULL){
 		print(v)
 		cl<-append(cl, v)
 		kol = nrow(mix) - kol_st
-		clustersplot(mix, cl, n, resultant_system_of_stolps, kol)
+		clustersplot(mix, cl, n, resultant_system_of_stolps, kol) # функция отображения результата
 		
 	}
 
