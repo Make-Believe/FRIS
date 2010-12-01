@@ -8,9 +8,9 @@ importFrom(cluster, fanny)
 
 ## and one and only one core function
 
+export(fris_class)
+export(fris_tax)
 
-export(fristdr)
 export(fris_stolps)
 export(clustersplot)
 useDynLib(ftdr)
-

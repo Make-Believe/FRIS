@@ -247,14 +247,14 @@ void fris_compact_ss(int * s, int * kol_ss, int * kol_st, double * dm_mix, int *
 	// kol_st - количество верифицированных образов;
 	// n - количество классов в разбиении;
 	// rez - переменная для формирования результата;
-void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int * kol_st, int * n, double *rez) {
+void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int * kol_st, int * n,  double * rrr, double *rez) {
 	double rho_self, rho_alien, rho, rho_min, rho_cl[*n];
 	double f=0, r=0;
 	int k, i, j, num_class, el;
 	
 	for (k = 1; k <= *kol_st; k++){ 			// для каждого образца находим расстояние до ближайшего своего и ближайшего чужого. 
 		rho_self=0;
-		rho_alien=3;
+		rho_alien=*rrr;
 		if (k != *smpl){						// рассматриваем его, если только он не является передаваемым столпом
 			if(cl[k-1] == *num_cl){				// находим расстояния, если он попадает в передаваемый класс 
 				rho_self = get_el(dm, k, *smpl, kol_st);
@@ -300,7 +300,7 @@ void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int 
 	// 5) n - количество классов в разбиении;
 	// 6) kol_col - количество столбцов в s;
 	// 7) rez - переменная для формирования результата;
-void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int * n, int * kol_col, double * rez) {
+void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int * n, int * kol_col,  double * rrr, double * rez) {
 	int i,j,k, count;
 	int ss[*n+1][*kol_col+1];
 	int b[(*n+1) * (*kol_col+1)];
@@ -313,7 +313,7 @@ void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int 
 	}
 	for (k = 1; k <= *kol_st; k++){
 		rho_self = 0;
-		rho_alien = 3;	
+		rho_alien = *rrr;	
 		if(cheking(k, ss[cl[k-1]], *kol_col) == "TRUE"){
 			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm, kol_st); 
 			count = 1;
@@ -345,7 +345,6 @@ void recalc(double * b, int * n, double * xx, double *yy){
 	double y[*n];
 	double d;
 	int i;
-
 	x[0] = b[0];
 	y[0] = 0;
 	d = pow(b[0],2);
@@ -356,12 +355,72 @@ void recalc(double * b, int * n, double * xx, double *yy){
 		} 
 		d = sqrt(d); 
 	if (x[*n-1] > 0){
-		//printf("xx = %f\n", d/sqrt(1+pow((y[*n-1]/x[*n-1]),2)) );
 		*xx = d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
-
 	}else{
 		*xx = -d/sqrt(1+pow((y[*n-1]/x[*n-1]),2));
 	}
-	
 	*yy = y[*n-1]/x[*n-1] * *xx;
+}
+
+void reduced_fris(int * k, int * s, int * kol, double * dm, double * rho_alien, double * rez){
+	int i, j;
+	double rho_self, rho, f, re;
+	//printf ("kol = %i\n",*kol);
+	//printf ("k = %i\n",*k);
+	
+	for (i = 1; i <= *kol; i++){
+		rho_self = 0;
+		for (j = 1; j<= *k; j++){
+			if(rho_self == 0){
+				rho_self = get_el(dm, s[j-1], i, kol);
+			}else{
+				rho= get_el(dm, s[j-1], i, kol); 	
+				if (rho_self > rho){
+					rho_self = rho;
+				}
+			}
+		} 
+	f = fris(rho_self, *rho_alien);			// считаем значение fris-функции для k образца
+	re=re+f;		
+	}
+*rez = re / *kol;		
+}
+
+void est(int * kol_class, int * s, int * kol, double * dm, double * rrr,  double * rez, int * cl){
+	int i, j, k,  num, ss[*kol_class];
+	double rho_self, rho, f, re, max;
+	const l = 1;
+	
+	for (i = 1; i <= *kol; i++) {
+		rho_self = get_el(dm, s[0], i, kol);
+		num = 1;
+		for (j = 1; j<= *kol_class; j++){
+			rho= get_el(dm, s[j-1], i, kol); 	
+			if (rho_self > rho){
+				rho_self = rho;
+				num = j;
+			}
+
+		}
+		cl[i-1] = num;	
+	}
+	for (k = 1; k<=*kol_class; k++){
+		fris_compact_verified(&k, &l, dm, cl, kol, kol_class, rrr, rez);
+		max = *rez;
+		num = i;
+
+		for (i = 1; i <= *kol; i++){
+			if (cl[i-1] == k){
+				fris_compact_verified(&k, &i, dm, cl, kol, kol_class, rrr, rez);
+				if (max < *rez){
+					max = *rez;
+					num = i;
+				}
+			}
+		}
+		ss[k-1] = num;
+		s[k-1] = num;
+	}
+	fris_compact_ss_verified(&ss, kol, dm, cl, kol_class, &l, rrr, rez);
+	
 }
