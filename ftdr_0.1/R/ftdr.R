@@ -202,7 +202,7 @@ clustersplot <- function(data_st, cl, n, ss, kol=0){
 	# unknown_data - неклассифицированные данные
 	# K - максимально возможное число кластеров
 	# r - фиксированное расстояние 
-fris_tax <- function(unknown_data, K, r=NULL){
+fris_tax <- function(unknown_data, K, r=NULL, cls=FALSE){
 	s = NULL
 	fss = NULL
 	cl=NULL
@@ -246,17 +246,28 @@ fris_tax <- function(unknown_data, K, r=NULL){
 		}			
 	}
 	num<- which.max(ff_mix)
-	clustersplot(unknown_data, cll[[num]], num+1, sss[[num]])
+	if(cls==FALSE){
+		clustersplot(unknown_data, cll[[num]], num+1, sss[[num]])
+	}
 	result<-list(stolps = sss[[num]], clustering = cll[[num]], n=num+1)
 	result
 } 
 
-fris_class <- function(unknown_data, K, r=NULL) {
-	m<-fris_tax(unknown_data, K, r)	
-	print ("Первая система столпов:")
-	print (m$stolps)
-	print ("Количество кластеров:")
-	print (m$n)
+fris_class <- function(unknown_data, K, r=NULL, f=NULL, alpha=NULL) {
+	m<-fris_tax(unknown_data, K, r, TRUE)										# первый шаг, разбили выборку на кластеры, в каждом кластере 1 столп. 
+	dm = as.matrix(daisy(unknown_data, metric = "euclidean"))
+	t = c()
+
+	if (is.null(f)){f = 0.2}
+	if (is.null(alpha)){alpha = 7}
 	
-	
+	storage.mode(dm) <- "double"
+	rz <- .C("fris_class", dm, as.integer(nrow(unknown_data)), as.integer(m$n), as.integer(m$stolps), as.integer(m$clustering),as.double(f), as.double(alpha), PACKAGE="ftdr") 
+	cl <- rz[[5]] 
+	s <- list()
+	for (i in 1:m$n){
+		s[[i]] <- m$stolps[i]
+	}
+	clustersplot(unknown_data, cl, m$n, s)	
+	print (cl)
 }

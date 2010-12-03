@@ -338,7 +338,6 @@ void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int 
 *rez = r / *kol_st; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке 
 }
 
-
 void recalc(double * b, int * n, double * xx, double *yy){
 	double pi = 3.1415926535;
 	double x[*n];
@@ -423,4 +422,158 @@ void est(int * kol_class, int * s, int * kol, double * dm, double * rrr,  double
 	}
 	fris_compact_ss_verified(&ss, kol, dm, cl, kol_class, &l, rrr, rez);
 	
+}
+
+void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, double * ff, double * alpha ){
+	int i, j, jj, k, l, area, points[*kol], count = 0, merger[* kol_class][* kol_class], a, b;
+	double rho, rho_k, rho_l, f, rho_a, rho_b;
+	
+	for (k = 1; k<= *kol_class; k++){
+		for (l = 1; l<= *kol_class; l++){
+			if (k==l){
+				merger[k][l] = 1;
+			}else{
+			merger[k][l] = 0 ;
+			}
+		}
+	}
+	
+	for (k = 1; k < *kol_class; k++){
+		for (l = k; l <= *kol_class; l++){
+			if (l != k){
+				for (i = 1; i <= *kol; i++){
+					if (cl[i-1] == k || cl[i-1] == l){
+						rho_k = get_el(dm, stolps[k-1], i, kol);
+						rho_l = get_el(dm, stolps[l-1], i, kol);
+						area = 1;
+						for (j=0; j<*kol_class; j++){
+							if (rho_k > get_el(dm, stolps[j], i, kol)  || rho_l > get_el(dm, stolps[j], i, kol)){
+								area=0;
+							}else{
+								area = 1;
+							}
+						}
+						if (area==1 & cl[i-1] == k){
+							f = fris(rho_k, rho_l);
+						}
+						if (area==1 & cl[i-1] == l){
+							f = fris(rho_l, rho_k);
+						}
+						if (f > *ff){
+							area=0;
+						}
+						if (area == 1){
+							points[count] = i; 
+							//printf(" %i ", i);
+							count ++;
+						}
+					}
+				}
+			}
+		}	
+	}
+	count--;
+	//printf("\n");
+	for (i=0; i<=count; i++){											// идем по всем точкам, попавшим в зону конкуренции, проверяем надо ли объединять по ним классы. 
+		k = cl[points[i]-1];
+		
+		rho_l = 0;
+		for (j = 0; j<*kol_class; j++){
+			if (rho_l == 0 && cl[stolps[j]-1] != k ){
+				rho_l = get_el(dm, stolps[j], points[i], kol);
+				l = cl[stolps[j]-1];
+			}
+			//printf("  %i  ", j);
+			//printf("  %f", get_el(dm, stolps[j], points[i], kol));
+			
+			if(cl[stolps[j]-1] != k && rho_l > get_el(dm, stolps[j], points[i], kol)){
+				l = cl[stolps[j]-1];
+			}
+		}
+		
+		//printf("k = %i ", k);
+		//printf("l = %i\n ", l);
+		if (merger[k][l] != 1 && merger[l][k] != 1){					//проверяем надо ли объединять k и l классы
+			rho_a = 0;													//расстояние до ближайшего своего от точки а;
+			rho_b = 0;													//расстояние до ближайшего своего от точки b;
+			rho = 0;													//минимальное расстояние между a и b точками из классов l и k;
+			for (j = 0; j <= count; j++){
+				for (jj = j; jj <= count; jj++){
+					if (jj!=j){
+						if(cl[points[j]-1] != cl[points[jj]-1]){
+							if (rho == 0) {
+								rho = get_el(dm, points[j], points[jj], kol);
+								a=points[j];
+								b=points[jj];
+							}else{
+								if (rho > get_el(dm, points[j], points[jj], kol)){
+									rho = get_el(dm, points[j], points[jj], kol);
+									a=points[j];
+									b=points[jj];
+								}
+							}	
+						}
+					}
+				}
+			}
+			for (j = 1; j <= *kol; j++){
+				if (j != a && j != b){
+					if (cl[j-1] == cl[a-1]){
+						if (rho_a == 0){
+							rho_a = get_el(dm, j, a, kol);
+						}else{
+							if(rho_a > get_el(dm, j, a, kol)){
+								rho_a = get_el(dm, j, a, kol);
+							}  
+						}
+					}
+					if (cl[j-1] == cl[b-1]){
+						if (rho_b == 0){
+							rho_b = get_el(dm, j, b, kol);
+						}else{
+							if(rho_b > get_el(dm, j, b, kol)){
+								rho_b = get_el(dm, j, b, kol);
+							}  
+						}
+					}
+				}	
+			}  
+			//printf("rho_a = %f\n", rho_a);
+			//printf("rho_b = %f\n", rho_b);
+			//printf("rho_a = %f\n", (rho_a+rho_b)/2);
+			if (rho_a < (*alpha * rho_b) && rho_b < (*alpha * rho_a) && rho < *alpha *((rho_a+rho_b)/2)){
+				merger[k][l] = 1;
+				merger[l][k] = 1;
+				//printf("merge\n");
+			}
+		}
+	}
+	
+	for (k = *kol_class; k>=1; k--){
+		for (i=1; i<=*kol; i++){
+			if(cl[i-1] != k && merger[cl[i-1]][k]==1){
+				cl[i-1] = k;
+			}
+		} 
+	}
+	
+	/*int bb[*kol];
+	count=0;
+	for (i = 0; i<*kol; i++){
+		if (cheking(cl[i], bb, *kol)=="TRUE"){
+			bb[count]= cl[i];
+			//printf("%i", bb[count]);
+			count ++;
+		}
+	}
+	for (k=1; k<=count;k++){
+		for (i = 0; i<*kol; i++){
+			if(bb[k-1]==cl[i]){
+				cl[i]=k;
+			}
+		}
+	}
+	
+	//printf("\n");
+	//printf("%i\n", count);*/
 }
