@@ -145,6 +145,7 @@ fris_stolps <- function(data_st, cl, n, new=NULL, r=NULL){
 			number<-append(number, i)
 			
 		}
+		
 		cl<-append(cl, cluster)
 		kol = nrow(mix) - kol_st
 		clustersplot(mix, cl, n, resultant_system_of_stolps, kol) # функция отображения результата
@@ -254,15 +255,13 @@ fris_tax <- function(unknown_data, K, r=NULL, cls=FALSE){
 } 
 
 fris_class <- function(unknown_data, K, r=NULL, f=NULL, alpha=NULL) {
-	m<-fris_tax(unknown_data, K, r, TRUE)										# первый шаг, разбили выборку на кластеры, в каждом кластере 1 столп. 
+	m<-fris_tax(unknown_data, K, r, TRUE)								# первый шаг, разбили выборку на кластеры, в каждом кластере 1 столп. 
 	dm = as.matrix(daisy(unknown_data, metric = "euclidean"))
 	t = c()
-
 	if (is.null(f)){f = 0.2}
 	if (is.null(alpha)){alpha = 7}
-	
 	storage.mode(dm) <- "double"
-	rz <- .C("fris_class", dm, as.integer(nrow(unknown_data)), as.integer(m$n), as.integer(m$stolps), as.integer(m$clustering),as.double(f), as.double(alpha), PACKAGE="ftdr") 
+	rz <- .C("fris_class", dm, as.integer(nrow(unknown_data)), as.integer(m$n), as.integer(m$stolps), as.integer(m$clustering), as.double(f), as.double(alpha), PACKAGE="ftdr") 
 	cl <- rz[[5]] 
 	s <- list()
 	for (i in 1:m$n){
@@ -270,4 +269,5 @@ fris_class <- function(unknown_data, K, r=NULL, f=NULL, alpha=NULL) {
 	}
 	clustersplot(unknown_data, cl, m$n, s)	
 	print (cl)
+	cl
 }
