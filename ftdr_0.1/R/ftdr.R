@@ -58,8 +58,8 @@ chck <- function (l, s){
 	# new - набор новых образцов
 fris_stolps <- function(data_st, cl, n, new=NULL, r=NULL){
 #Первый шаг алгоритма, определяем по одному столпу на кждый класс. 		
-	kol_st <- length(cl)												#Количество стандартных образцов 
-	dm <- as.matrix(daisy(data_st, metric = "euclidean"))				#Матрица сходства
+	kol_st <- length(cl)												#Количество стандартных образцов 	
+	dm <- as.matrix(daisy(data_st))										#Матрица сходства
 	if (is.null(r)){r = (max(dm)*2)}
 	s <- list()
 	for (i in 1:n){							
@@ -69,7 +69,8 @@ fris_stolps <- function(data_st, cl, n, new=NULL, r=NULL){
 			if (cl[j] == i) {
 			 	storage.mode(dm) <- "double"
 				rez=0
-				f_c_m <- .C("fris_compact_verified", as.integer(i), as.integer(j), dm, cl, as.integer(kol_st), as.integer(n), as.double(r),as.double(rez), PACKAGE="ftdr")
+				#print (cl)
+				f_c_m <- .C("fris_compact_verified", as.integer(i), as.integer(j), dm, as.integer(cl), as.integer(kol_st), as.integer(n), as.double(r),as.double(rez), PACKAGE="ftdr")
 				f_mix <- append(f_mix,  f_c_m[[8]])
 				i_f <- append(i_f, j)
 			} 
@@ -85,7 +86,7 @@ fris_stolps <- function(data_st, cl, n, new=NULL, r=NULL){
 	ff_mix =NULL
 	
 	for (k in 1:kol_st){
-		if (k > (kol_st-4)){break}											#Запасное условие остановки:)
+		if (k > (kol_st-(kol_st/2))){break}											#Запасное условие остановки:)
 		if (k>3){
 			if (ff_mix[k-1] <= ff_mix[k-2]){
 				if (ff_mix[k-2] >= ff_mix[k-3]){break}					#Условие остановки
@@ -104,7 +105,7 @@ fris_stolps <- function(data_st, cl, n, new=NULL, r=NULL){
 				system_of_slolps[[ cl[j] ]] <- append(system_of_slolps[[ cl[j] ]], j)
 				ss <- list.as.matrix(system_of_slolps)
 				storage.mode(ss) <- "integer"
-				f_c_m_s <- .C("fris_compact_ss_verified", ss, as.integer(kol_st), dm, cl, as.integer(n), as.integer(ncol(ss)), as.double(r), as.double(rez), PACKAGE="ftdr")	
+				f_c_m_s <- .C("fris_compact_ss_verified", as.integer(cl), ss, as.integer(kol_st), dm, as.integer(n), as.integer(ncol(ss)), as.double(r), as.double(rez), PACKAGE="ftdr")	
 				f_mix <- append(f_mix, f_c_m_s[[8]] )
 				i_f <- append(i_f, j)
 				cl_i <- append (cl_i, cl[j])
@@ -259,7 +260,7 @@ fris_class <- function(unknown_data, K, r=NULL, f=NULL, alpha=NULL) {
 	dm = as.matrix(daisy(unknown_data, metric = "euclidean"))
 	t = c()
 	if (is.null(f)){f = 0.2}
-	if (is.null(alpha)){alpha = 7}
+	if (is.null(alpha)){alpha = 1.2}
 	storage.mode(dm) <- "double"
 	rz <- .C("fris_class", dm, as.integer(nrow(unknown_data)), as.integer(m$n), as.integer(m$stolps), as.integer(m$clustering), as.double(f), as.double(alpha), PACKAGE="ftdr") 
 	cl <- rz[[5]] 
@@ -268,6 +269,6 @@ fris_class <- function(unknown_data, K, r=NULL, f=NULL, alpha=NULL) {
 		s[[i]] <- m$stolps[i]
 	}
 	clustersplot(unknown_data, cl, m$n, s)	
-	print (cl)
+	#print (cl)
 	cl
 }

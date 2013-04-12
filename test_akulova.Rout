@@ -1,0 +1,35 @@
+
+R version 2.12.1 RC (2010-12-08 r53817)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: i686-pc-linux-gnu (32-bit)
+
+R -- это свободное ПО, и оно поставляется безо всяких гарантий.
+Вы вольны распространять его при соблюдении некоторых условий.
+Введите 'license()' для получения более подробной информации.
+
+R -- это проект, в котором сотрудничает множество разработчиков.
+Введите 'contributors()' для получения дополнительной информации и
+'citation()' для ознакомления с правилами упоминания R и его пакетов
+в публикациях.
+
+Введите 'demo()' для запуска демонстрационных программ, 'help()' -- для
+получения справки, 'help.start()' -- для доступа к справке через браузер.
+Введите 'q()', чтобы выйти из R.
+
+[Загружено ранее сохраненное рабочее пространство]
+
+> # test
+> library(cluster)
+> library(ftdr)
+> new = read.table("/home/olga/Dev/fristdr/ftdr_0.1/data/D_SRS.csv")
+> cl = fris_class(new, 4)
+
+ *** caught segfault ***
+address 0x2e564224, cause 'memory not mapped'
+
+Traceback:
+ 1: .C("fris_class", dm, as.integer(nrow(unknown_data)), as.integer(m$n),     as.integer(m$stolps), as.integer(m$clustering), as.double(f),     as.double(alpha), PACKAGE = "ftdr")
+ 2: fris_class(new, 4)
+aborting ...
+Segmentation fault

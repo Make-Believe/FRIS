@@ -28,7 +28,6 @@ double get_min(int * ss, int * kol, int k, double * dm_mix, int * kol_ss){
 	int i;
 	double mn, rho;
 	mn = 0;
-	//printf("kol = %i\n", *kol);
 	for (i=1; i<= *kol; i++){
 		if (ss[i] != 0 && ss[i]!=k){
 			if (mn == 0){
@@ -50,7 +49,7 @@ char * cheking(int k, int * b, int kol){
 	char * d; 
 	int i;
 	d = "TRUE";
-	for (i = 0; i < kol; i++){
+	for (i = 1; i <=kol; i++){
 		if (b[i] == k){
 			d = "FALSE";
 		}
@@ -251,6 +250,7 @@ void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int 
 	double rho_self, rho_alien, rho, rho_min, rho_cl[*n];
 	double f=0, r=0;
 	int k, i, j, num_class, el;
+
 	
 	for (k = 1; k <= *kol_st; k++){ 			// для каждого образца находим расстояние до ближайшего своего и ближайшего чужого. 
 		rho_self=0;
@@ -288,7 +288,8 @@ void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int 
 		}
 		f = fris(rho_self, rho_alien);			// считаем значение fris-функции для k образца
 		r=r+f;									
-	}	
+	}
+	
 	*rez = r / *kol_st; 						// Находим значение fris- функции, сумму значений fris-функций делим на количество образцов в смешанной выборке
 }
 
@@ -300,7 +301,7 @@ void fris_compact_verified(int * num_cl, int * smpl, double * dm, int * cl, int 
 	// 5) n - количество классов в разбиении;
 	// 6) kol_col - количество столбцов в s;
 	// 7) rez - переменная для формирования результата;
-void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int * n, int * kol_col,  double * rrr, double * rez) {
+void fris_compact_ss_verified(int * cl, int * s, int * kol_st, double * dm, int * n, int * kol_col,  double * rrr, double * rez) {
 	int i,j,k, count;
 	int ss[*n+1][*kol_col+1];
 	int b[(*n+1) * (*kol_col+1)];
@@ -311,13 +312,15 @@ void fris_compact_ss_verified(int * s, int * kol_st, double * dm, int * cl, int 
 			ss[i][j] = get_eli(s, i, j, n);
 		}
 	}
+
 	for (k = 1; k <= *kol_st; k++){
 		rho_self = 0;
-		rho_alien = *rrr;	
+		rho_alien = *rrr;
+		
 		if(cheking(k, ss[cl[k-1]], *kol_col) == "TRUE"){
+			
 			rho_self = get_min(ss[cl[k-1]], kol_col, k, dm, kol_st); 
 			count = 1;
-			
 			for (i=1; i<= *n; i++){
 				if (cl[k-1] != i){
 					for (j=0; j< *kol_col; j++){
@@ -364,8 +367,6 @@ void recalc(double * b, int * n, double * xx, double *yy){
 void reduced_fris(int * k, int * s, int * kol, double * dm, double * rho_alien, double * rez){
 	int i, j;
 	double rho_self, rho, f, re;
-	//printf ("kol = %i\n",*kol);
-	//printf ("k = %i\n",*k);
 	
 	for (i = 1; i <= *kol; i++){
 		rho_self = 0;
@@ -425,7 +426,7 @@ void est(int * kol_class, int * s, int * kol, double * dm, double * rrr,  double
 }
 
 void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, double * ff, double * alpha ){
-	int i, j, jj, k, l, area, points[*kol], count = 0, merger[* kol_class][* kol_class], a, b;
+	int i, j, jj, k, l, area, points[*kol], count = 0, merger[* kol_class][* kol_class], a=-1, b=-1;
 	double rho, rho_k, rho_l, f, rho_a, rho_b;
 	
 	for (k = 1; k<= *kol_class; k++){
@@ -463,8 +464,7 @@ void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, 
 							area=0;
 						}
 						if (area == 1){
-							points[count] = i; 
-							//printf(" %i ", i);
+							points[count] = i; 							// точка попавшая в зону конкуренции
 							count ++;
 						}
 					}
@@ -473,33 +473,25 @@ void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, 
 		}	
 	}
 	count--;
-	//printf("\n");
 	for (i=0; i<=count; i++){											// идем по всем точкам, попавшим в зону конкуренции, проверяем надо ли объединять по ним классы. 
-		k = cl[points[i]-1];
-		
+		k = cl[points[i]-1];											// k - класс первой точки
 		rho_l = 0;
 		for (j = 0; j<*kol_class; j++){
 			if (rho_l == 0 && cl[stolps[j]-1] != k ){
 				rho_l = get_el(dm, stolps[j], points[i], kol);
 				l = cl[stolps[j]-1];
 			}
-			//printf("  %i  ", j);
-			//printf("  %f", get_el(dm, stolps[j], points[i], kol));
-			
 			if(cl[stolps[j]-1] != k && rho_l > get_el(dm, stolps[j], points[i], kol)){
-				l = cl[stolps[j]-1];
+				l = cl[stolps[j]-1];									// l - класс второй точки 
 			}
 		}
-		
-		//printf("k = %i ", k);
-		//printf("l = %i\n ", l);
+
 		if (merger[k][l] != 1 && merger[l][k] != 1){					//проверяем надо ли объединять k и l классы
 			rho_a = 0;													//расстояние до ближайшего своего от точки а;
 			rho_b = 0;													//расстояние до ближайшего своего от точки b;
 			rho = 0;													//минимальное расстояние между a и b точками из классов l и k;
 			for (j = 0; j <= count; j++){
-				for (jj = j; jj <= count; jj++){
-					if (jj!=j){
+				for (jj = j+1; jj <= count; jj++){
 						if(cl[points[j]-1] != cl[points[jj]-1]){
 							if (rho == 0) {
 								rho = get_el(dm, points[j], points[jj], kol);
@@ -513,38 +505,38 @@ void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, 
 								}
 							}	
 						}
-					}
 				}
 			}
-			for (j = 1; j <= *kol; j++){
-				if (j != a && j != b){
-					if (cl[j-1] == cl[a-1]){
-						if (rho_a == 0){
-							rho_a = get_el(dm, j, a, kol);
-						}else{
-							if(rho_a > get_el(dm, j, a, kol)){
+			if (a < 0 || b < 0) {
+				merger[k][l] = 0;
+				merger[l][k] = 0;
+			}else{
+				for (j = 1; j <= *kol; j++){
+					if (j != a && j != b){
+						if (cl[j-1] == cl[a-1]){ 
+							if (rho_a == 0){
 								rho_a = get_el(dm, j, a, kol);
-							}  
+							}else{
+								if(rho_a > get_el(dm, j, a, kol)){
+									rho_a = get_el(dm, j, a, kol);
+								}  
+							}
 						}
-					}
-					if (cl[j-1] == cl[b-1]){
-						if (rho_b == 0){
-							rho_b = get_el(dm, j, b, kol);
-						}else{
-							if(rho_b > get_el(dm, j, b, kol)){
+						if (cl[j-1] == cl[b-1]){
+							if (rho_b == 0){
 								rho_b = get_el(dm, j, b, kol);
-							}  
+							}else{
+								if(rho_b > get_el(dm, j, b, kol)){
+									rho_b = get_el(dm, j, b, kol);
+								}  
+							}
 						}
-					}
-				}	
-			}  
-			//printf("rho_a = %f\n", rho_a);
-			//printf("rho_b = %f\n", rho_b);
-			//printf("rho_a = %f\n", (rho_a+rho_b)/2);
-			if (rho_a < (*alpha * rho_b) && rho_b < (*alpha * rho_a) && rho < *alpha *((rho_a+rho_b)/2)){
-				merger[k][l] = 1;
-				merger[l][k] = 1;
-				//printf("merge\n");
+					}	
+				}  
+				if (rho_a < (*alpha * rho_b) && rho_b < (*alpha * rho_a) && rho < *alpha *((rho_a+rho_b)/2)){
+					merger[k][l] = 1;
+					merger[l][k] = 1;
+				}
 			}
 		}
 	}
@@ -562,7 +554,6 @@ void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, 
 	for (i = 0; i<*kol; i++){
 		if (cheking(cl[i], bb, *kol)=="TRUE"){
 			bb[count]= cl[i];
-			//printf("%i", bb[count]);
 			count ++;
 		}
 	}
@@ -572,8 +563,5 @@ void fris_class(double * dm, int *kol, int * kol_class, int * stolps, int * cl, 
 				cl[i]=k;
 			}
 		}
-	}
-	
-	//printf("\n");
-	//printf("%i\n", count);*/
+	}*/
 }

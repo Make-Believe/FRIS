@@ -15,4 +15,4 @@ install: package
 	sudo R CMD INSTALL $(PKG_TGZ)
 	
 debug: install
-	R -d gdb
+	R -d gdb 
